@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Fun AI Characters Chat Demo</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 40px; }
+    #chat { border: 1px solid #ccc; padding: 10px; margin-bottom: 20px; height: 300px; overflow-y: auto; }
+    #message { width: 80%; }
+    #send { width: 18%; }
+  </style>
+</head>
+<body>
+  <h1>Talk to Fun AI Characters!</h1>
+  <div>
+    <label for="character">Choose a character:</label>
+    <select id="character"></select>
+  </div>
+  <div id="chat"></div>
+  <input type="text" id="message" placeholder="Type your message..." />
+  <button id="send">Send</button>
+  <script>
+    async function fetchCharacters() {
+      const res = await fetch('http://localhost:3001/characters');
+      const data = await res.json();
+      const select = document.getElementById('character');
+      data.characters.forEach(c => {
+        const option = document.createElement('option');
+        option.value = c;
+        option.textContent = c;
+        select.appendChild(option);
+      });
+    }
+
+    async function sendMessage() {
+      const character = document.getElementById('character').value;
+      const message = document.getElementById('message').value;
+      if (!message.trim()) return;
+      const chatDiv = document.getElementById('chat');
+      chatDiv.innerHTML += `<div><strong>You:</strong> ${message}</div>`;
+      document.getElementById('message').value = '';
+      const res = await fetch('http://localhost:3001/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ character, message })
+      });
+      const data = await res.json();
+      chatDiv.innerHTML += `<div><strong>${character}:</strong> ${data.reply}</div>`;
+      chatDiv.scrollTop = chatDiv.scrollHeight;
+    }
+
+    document.getElementById('send').addEventListener('click', sendMessage);
+    document.getElementById('message').addEventListener('keydown', e => {
+      if (e.key === 'Enter') sendMessage();
+    });
+
+    fetchCharacters();
+  </script>
+</body>
+</html>
